@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheel of Decisions</title>
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon-dark.svg" type="image/svg+xml">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        :root {
+            --bg-color: #121212; --primary-text-color: #e0e0e0; --secondary-text-color: #b0b0b0; --input-bg: #1e1e1e; --input-border: #333; --button-bg: #007bff; --button-hover-bg: #0056b3; --accent-color: #007bff; --font-family: 'Inter', sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color); color: var(--primary-text-color); font-family: var(--font-family); margin: 0; display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        header {
+            position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 20px; z-index: 100;
+        }
+
+        .main-container {
+            display: flex; flex-wrap: wrap; flex-grow: 1; padding: 80px 20px 20px;
+        }
+        
+        .controls-panel {
+            flex: 1; min-width: 320px; padding: 0 20px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .wheel-container {
+            flex: 2; min-width: 400px; display: grid; place-items: center; position: relative;
+        }
+
+        #wheelCanvas {
+            max-width: 100%; height: auto; transition: transform 0.5s ease-out;
+        }
+        
+        .wheel-pointer {
+            width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 50px solid var(--accent-color); position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 10;
+        }
+
+        h2 { font-weight: 700; border-bottom: 2px solid var(--input-border); padding-bottom: 10px; margin-top: 0; }
+        .control-group { display: flex; gap: 10px; }
+        .control-group input[type="text"] { flex-grow: 1; }
+        input, select, button {
+            background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--primary-text-color); font-size: 1rem; padding: 10px; border-radius: 5px; font-family: inherit;
+        }
+        button { background-color: var(--button-bg); cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: var(--button-hover-bg); }
+        .spin-button { padding: 15px; font-size: 1.5rem; font-weight: 900; width: 100%; }
+
+        #optionsList { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+        #optionsList li {
+            background-color: var(--input-bg); padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .color-dot { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px; }
+        .delete-option { background: none; border: none; color: var(--secondary-text-color); font-size: 1.2rem; cursor: pointer; transition: color 0.2s; }
+        .delete-option:hover { color: #dc3545; }
+
+        .checkbox-container { display: flex; align-items: center; gap: 10px; }
+        
+        .lang-switcher, #back-to-hub { color: var(--secondary-text-color); text-decoration: none; font-weight: 700; padding: 8px 12px; }
+        .lang-switcher { display: flex; gap: 10px; }
+        .lang-switcher a { border-bottom: 2px solid transparent; }
+        .lang-switcher a.active { color: var(--primary-text-color); border-bottom-color: var(--accent-color); }
+        #back-to-hub { border-radius: 8px; background-color: rgba(255, 255, 255, 0.05); transition: all 0.2s; }
+        #back-to-hub:hover { background-color: rgba(255, 255, 255, 0.1); color: var(--primary-text-color); }
+
+        .footer {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100;
+        }
+        /* ... Стили для футера и попапа от автора без изменений ... */
+        #author-signature { color: var(--secondary-text-color); cursor: pointer; font-size: 0.9rem; padding: 5px 10px; transition: color 0.2s; } #author-signature:hover { color: var(--primary-text-color); } #links-popup { position: absolute; bottom: 120%; left: 50%; background-color: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 10px; opacity: 0; visibility: hidden; transform: translate(-50%, 10px); transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s 0.3s; z-index: 100; } #links-popup.visible { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; } #links-popup a { color: var(--primary-text-color); text-decoration: none; padding: 8px 15px; display: block; border-radius: 5px; transition: background-color 0.2s; white-space: nowrap; } #links-popup a:hover { background-color: rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="https://infikot.github.io/" id="back-to-hub"></a>
+        <div class="lang-switcher">
+            <a href="#" class="lang-btn" data-lang="ru">RU</a>
+            <a href="#" class="lang-btn" data-lang="en">EN</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="controls-panel">
+            <div>
+                <h2 id="options-header"></h2>
+                <div class="control-group">
+                    <input type="text" id="optionInput" placeholder="..."/>
+                    <input type="color" id="optionColor" value="#5e81ac"/>
+                    <button id="addOptionBtn"></button>
+                </div>
+                <ul id="optionsList"></ul>
+            </div>
+            
+            <div>
+                 <h2 id="settings-header"></h2>
+                 <div class="checkbox-container">
+                    <input type="checkbox" id="eliminationMode">
+                    <label for="eliminationMode" id="elimination-label"></label>
+                 </div>
+            </div>
+
+            <div>
+                <h2 id="storage-header"></h2>
+                <div class="control-group">
+                    <input type="text" id="wheelNameInput" placeholder=""/>
+                    <button id="saveWheelBtn"></button>
+                </div>
+                <br>
+                <div class="control-group">
+                    <select id="savedWheelsSelect"></select>
+                    <button id="loadWheelBtn"></button>
+                    <button id="deleteWheelBtn"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <span id="author-signature">by infikot</span>
+        <div id="links-popup">
+             <a href="https://github.com/infikot/wheel-of-decisions" target="_blank">GitHub</a> <a href="https://t.me/infinite_edit" target="_blank">Telegram</a>
+        </div>
+    </div>
+    
+    <script>
+        const i18n = {
+            ru: {
+                backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", winnerMsg: "Победитель:", finalWinnerMsg: "Финальный победитель:", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты, чтобы крутить колесо!"
+            },
+            en: {
+                backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", winnerMsg: "The winner is:", finalWinnerMsg: "The final winner is:", defaultWheelName: "My Wheel", noOptionsMsg: "Add options to spin the wheel!"
+            }
+        };
+
+        // --- DOM Elements ---
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const addOptionBtn = document.getElementById('addOptionBtn');
+        const optionInput = document.getElementById('optionInput');
+        const optionColor = document.getElementById('optionColor');
+        const optionsList = document.getElementById('optionsList');
+        const spinBtn = document.createElement('button'); // Создаём кнопку динамически, чтобы легко менять текст
+        const eliminationModeCheckbox = document.getElementById('eliminationMode');
+        const saveWheelBtn = document.getElementById('saveWheelBtn');
+        const loadWheelBtn = document.getElementById('loadWheelBtn');
+        const deleteWheelBtn = document.getElementById('deleteWheelBtn');
+        const wheelNameInput = document.getElementById('wheelNameInput');
+        const savedWheelsSelect = document.getElementById('savedWheelsSelect');
+
+        // --- State ---
+        let segments = [];
+        let savedWheels = {};
+        let startAngle = 0;
+        let arc;
+        let spinTimeout = null;
+        let spinAngleStart;
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+        let isSpinning = false;
+        let currentLang = localStorage.getItem('preferredLang') || 'ru';
+        
+        const defaultColors = ["#BF616A", "#D08770", "#EBCB8B", "#A3BE8C", "#B48EAD", "#5E81AC", "#88C0D0"];
+        let colorIndex = 0;
+
+        // --- Core Functions ---
+        function drawWheel() {
+            arc = Math.PI / (segments.length / 2);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#3B4252';
+            ctx.lineWidth = 2;
+            ctx.font = '16px ' + getComputedStyle(document.body).fontFamily;
+
+            segments.forEach((segment, i) => {
+                const angle = startAngle + i * arc;
+                ctx.fillStyle = segment.color;
+
+                ctx.beginPath();
+                ctx.arc(250, 250, 250, angle, angle + arc, false);
+                ctx.arc(250, 250, 0, angle + arc, angle, true);
+                ctx.fill();
+
+                ctx.save();
+                ctx.fillStyle = "#ECEFF4"; // White text
+                ctx.translate(250 + Math.cos(angle + arc / 2) * 160, 250 + Math.sin(angle + arc / 2) * 160);
+                ctx.rotate(angle + arc / 2 + Math.PI / 2);
+                ctx.fillText(segment.text, -ctx.measureText(segment.text).width / 2, 0);
+                ctx.restore();
+            });
+        }
+        
+        function spin() {
+            if (isSpinning || segments.length < 2) return;
+            isSpinning = true;
+            spinAngleStart = Math.random() * 10 + 10; // Random power
+            spinTime = 0;
+            spinTimeTotal = Math.random() * 3 + 4 * 1000; // Random duration
+            rotateWheel();
+        }
+
+        function rotateWheel() {
+            spinTime += 30;
+            if (spinTime >= spinTimeTotal) {
+                stopRotateWheel();
+                return;
+            }
+            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            startAngle += (spinAngle * Math.PI / 180);
+            drawWheel();
+            spinTimeout = requestAnimationFrame(rotateWheel);
+        }
+        
+        function stopRotateWheel() {
+            cancelAnimationFrame(spinTimeout);
+            isSpinning = false;
+            const degrees = startAngle * 180 / Math.PI + 90;
+            const arcd = arc * 180 / Math.PI;
+            const index = Math.floor((360 - degrees % 360) / arcd);
+            
+            const winner = segments[index];
+            const msg = (eliminationModeCheckbox.checked && segments.length > 2) 
+                ? `${i18n[currentLang].winnerMsg} ${winner.text}` 
+                : `${i18n[currentLang].finalWinnerMsg} ${winner.text}`;
+
+            alert(msg);
+
+            if (eliminationModeCheckbox.checked) {
+                segments.splice(index, 1);
+                updateOptionsDisplay();
+                drawWheel();
+            }
+        }
+        
+        function easeOut(t, b, c, d) {
+            const ts = (t /= d) * t;
+            const tc = ts * t;
+            return b + c * (tc + -3 * ts + 3 * t);
+        }
+        
+        // --- UI & State Management ---
+        function addOption() {
+            const text = optionInput.value.trim();
+            if (!text) return;
+            
+            segments.push({ text: text, color: optionColor.value });
+            optionInput.value = '';
+            // Cycle to the next default color for convenience
+            optionColor.value = defaultColors[colorIndex % defaultColors.length];
+            colorIndex++;
+            
+            updateOptionsDisplay();
+            drawWheel();
+        }
+        
+        function deleteOption(index) {
+            segments.splice(index, 1);
+            updateOptionsDisplay();
+            drawWheel();
+        }
+        
+        function updateOptionsDisplay() {
+            optionsList.innerHTML = '';
+            segments.forEach((segment, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="color-dot" style="background-color: ${segment.color};"></span>
+                    <span>${segment.text}</span>
+                    <button class="delete-option" data-index="${i}">×</button>
+                `;
+                optionsList.appendChild(li);
+            });
+            if (segments.length < 2) {
+                if (document.body.contains(spinBtn)) spinBtn.remove();
+            } else {
+                 if (!document.body.contains(spinBtn)) {
+                    document.querySelector('.wheel-container').appendChild(spinBtn);
+                    spinBtn.className = "spin-button";
+                    spinBtn.style.position = 'absolute';
+                    spinBtn.onclick = spin;
+                 }
+                 spinBtn.textContent = i18n[currentLang].spinBtn;
+            }
+             if (segments.length === 0) {
+                 alert(i18n[currentLang].noOptionsMsg);
+             }
+        }
+
+        function saveCurrentWheel() {
+            const name = wheelNameInput.value.trim() || i18n[currentLang].defaultWheelName;
+            if (segments.length === 0) return;
+            savedWheels[name] = [...segments]; // Save a copy
+            localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
+            updateSavedWheelsDropdown();
+            wheelNameInput.value = '';
+            alert(`"${name}" saved!`);
+        }
+        
+        function loadSelectedWheel() {
+            const name = savedWheelsSelect.value;
+            if (name && savedWheels[name]) {
+                segments = [...savedWheels[name]]; // Load a copy
+                updateOptionsDisplay();
+                drawWheel();
+            }
+        }
+        
+        function deleteSelectedWheel() {
+            const name = savedWheelsSelect.value;
+            if (name && confirm(`Delete "${name}" permanently?`)) {
+                delete savedWheels[name];
+                localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
+                updateSavedWheelsDropdown();
+            }
+        }
+        
+        function updateSavedWheelsDropdown() {
+            savedWheelsSelect.innerHTML = '';
+            Object.keys(savedWheels).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                savedWheelsSelect.appendChild(option);
+            });
+        }
+        
+        function updateLanguage() {
+            document.documentElement.lang = currentLang;
+            localStorage.setItem('preferredLang', currentLang);
+
+            // Update all UI text
+            const texts = i18n[currentLang];
+            document.getElementById('back-to-hub').textContent = texts.backToHub;
+            document.getElementById('options-header').textContent = texts.optionsHeader;
+            optionInput.placeholder = texts.optionPlaceholder;
+            addOptionBtn.textContent = texts.addBtn;
+            document.getElementById('settings-header').textContent = texts.settingsHeader;
+            document.getElementById('elimination-label').textContent = texts.eliminationLabel;
+            document.getElementById('storage-header').textContent = texts.storageHeader;
+            wheelNameInput.placeholder = texts.saveNamePlaceholder;
+            saveWheelBtn.textContent = texts.saveBtn;
+            loadWheelBtn.textContent = texts.loadBtn;
+            deleteWheelBtn.textContent = texts.deleteBtn;
+            
+            if (document.body.contains(spinBtn)) spinBtn.textContent = texts.spinBtn;
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+            });
+        }
+        
+        // --- Initialization ---
+        function init() {
+            // Load saved wheels from storage
+            const storedWheels = localStorage.getItem('savedWheels');
+            if (storedWheels) {
+                savedWheels = JSON.parse(storedWheels);
+            }
+            updateSavedWheelsDropdown();
+            
+            // Add listeners
+            addOptionBtn.addEventListener('click', addOption);
+            optionInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addOption(); });
+            optionsList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-option')) {
+                    deleteOption(parseInt(e.target.dataset.index));
+                }
+            });
+            saveWheelBtn.addEventListener('click', saveCurrentWheel);
+            loadWheelBtn.addEventListener('click', loadSelectedWheel);
+            deleteWheelBtn.addEventListener('click', deleteSelectedWheel);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    currentLang = e.target.dataset.lang;
+                    updateLanguage();
+                });
+            });
+
+            // Footer listeners
+            document.getElementById('author-signature').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('links-popup').classList.toggle('visible'); });
+            document.addEventListener('click', (e) => { const popup = document.getElementById('links-popup'); if (!popup.contains(e.target) && e.target.id !== 'author-signature') { popup.classList.remove('visible'); } });
+            
+            // Initial render
+            updateLanguage();
+            if (segments.length === 0) { // Add some default options for first-time users
+                segments = [{ text: "Pizza", color: "#BF616A" }, { text: "Sushi", color: "#A3BE8C" }, { text: "Burgers", color: "#EBCB8B" }];
+                colorIndex = segments.length;
+            }
+            updateOptionsDisplay();
+            drawWheel();
+        }
+
+        init();
+    </script>
+</body>
+</html>
