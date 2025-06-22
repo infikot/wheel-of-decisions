@@ -141,16 +141,16 @@
             height: auto;
         }
         .wheel-pointer {
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 50px solid var(--accent-color);
+            width: 20px;
+            height: 20px;
+            background: var(--accent-color);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
             position: absolute;
             top: 4.5rem; /* Adjusted for ticker */
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) rotate(180deg);
             z-index: 10;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
         }
         .spin-button {
             margin-top: 20px;
@@ -200,6 +200,15 @@
         input[type="text"] {
             background: #2b2b2b;
         }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
         #optionsList {
             list-style: none;
             padding: 0;
@@ -239,13 +248,25 @@
             width: 55px;
             text-align: right;
         }
-        #optionsList .color-input {
-            padding: 0;
-            border: none;
-            background: none;
+        .color-dot-label {
+            position: relative;
             width: 25px;
             height: 25px;
             cursor: pointer;
+            flex-shrink: 0;
+        }
+        .color-dot-visible {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #444;
+            display: block;
+        }
+        .color-input-hidden {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
         }
         
         .edit-option-btn, .delete-option {
@@ -541,8 +562,9 @@
         }
         #weight-modal-info {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            gap: 5px;
         }
         #weight-modal-buttons, #text-edit-modal-buttons {
             display: flex;
@@ -648,8 +670,8 @@
             <h3 id="weight-modal-title"></h3>
             <div id="weight-modal-controls">
                 <div id="weight-modal-info">
-                    <input type="number" id="weight-modal-input" min="1" />
                     <span id="weight-modal-percentage"></span>
+                    <input type="number" id="weight-modal-input" min="1" />
                 </div>
                 <input type="range" id="weight-modal-slider" min="1" max="100" />
             </div>
@@ -979,7 +1001,10 @@
                         <input type="checkbox" ${segment.active ? "checked" : ""} data-index="${i}" class="toggle-active">
                         <span class="custom-checkbox"></span>
                     </label>
-                    <input type="color" value="${segment.color}" data-index="${i}" class="color-input">
+                    <label class="color-dot-label">
+                        <input type="color" value="${segment.color}" data-index="${i}" class="color-input-hidden">
+                        <span class="color-dot-visible" style="background-color: ${segment.color};"></span>
+                    </label>
                     <button class="edit-option-btn" data-index="${i}">✎</button>
                     <span class="option-text">${segment.text}</span>
                     <span class="percentage-display" style="display:${useWeights ? 'block' : 'none'}">${percentage}</span>
@@ -1123,8 +1148,9 @@
             
             document.getElementById('optionsList').addEventListener('input', e => {
                 const i = e.target.dataset.index;
-                if (e.target.classList.contains('color-input')) {
+                if (e.target.classList.contains('color-input-hidden')) {
                     segments[i].color = e.target.value;
+                    updateOptionsDisplay();
                     drawWheel();
                 }
             });
