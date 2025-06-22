@@ -49,6 +49,11 @@
             z-index: 102;
         }
 
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
         #menu-toggle {
             background: none;
             border: none;
@@ -57,6 +62,19 @@
             cursor: pointer;
             padding: 10px;
             z-index: 103;
+        }
+        #back-to-hub {
+            color: var(--secondary-text-color);
+            text-decoration: none;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        #back-to-hub:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--primary-text-color);
         }
 
         .sidebar {
@@ -191,6 +209,12 @@
             width: 50px;
             text-align: center;
         }
+        #optionsList .percentage-display {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+            width: 55px;
+            text-align: right;
+        }
         #optionsList .color-input {
             padding: 0;
             border: none;
@@ -217,7 +241,38 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            cursor: pointer;
+            user-select: none;
         }
+        .custom-checkbox {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #2b2b2b;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        .custom-checkbox::after {
+            content: '✔';
+            color: #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.2s;
+        }
+        input[type="checkbox"] {
+            display: none;
+        }
+        input[type="checkbox"]:checked + .custom-checkbox {
+            background-color: var(--accent-color);
+        }
+        input[type="checkbox"]:checked + .custom-checkbox::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
         #savedWheelsList {
             list-style: none;
             padding: 0;
@@ -241,6 +296,14 @@
         }
         #resetEliminationsBtn {
             width: 100%;
+        }
+        .import-export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .import-export-buttons button {
+            flex-grow: 1;
         }
 
         ::-webkit-scrollbar {
@@ -274,19 +337,6 @@
         .lang-switcher a.active {
             color: var(--primary-text-color);
             border-bottom-color: var(--accent-color);
-        }
-        #back-to-hub {
-            color: var(--secondary-text-color);
-            text-decoration: none;
-            font-weight: 700;
-            padding: 8px 12px;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.05);
-            transition: all 0.2s;
-        }
-        #back-to-hub:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: var(--primary-text-color);
         }
         
         .footer {
@@ -415,9 +465,11 @@
 <body>
 
     <div class="page-header">
-        <button id="menu-toggle">☰</button>
-        <div class="top-nav">
+        <div class="header-left">
+            <button id="menu-toggle">☰</button>
             <a href="https://infikot.github.io/" id="back-to-hub"></a>
+        </div>
+        <div class="top-nav">
             <div class="lang-switcher">
                 <a href="#" class="lang-btn" data-lang="ru">RU</a>
                 <a href="#" class="lang-btn" data-lang="en">EN</a>
@@ -438,8 +490,16 @@
             </div>
             <div class="settings-section">
                 <h2 id="settings-header"></h2>
-                <div class="checkbox-container"><input type="checkbox" id="eliminationMode" /><label for="eliminationMode" id="elimination-label"></label></div>
-                <div class="checkbox-container"><input type="checkbox" id="useWeightsMode" /><label for="useWeightsMode" id="weights-label"></label></div>
+                <label class="checkbox-container">
+                    <input type="checkbox" id="eliminationMode" />
+                    <span class="custom-checkbox"></span>
+                    <span id="elimination-label"></span>
+                </label>
+                <label class="checkbox-container">
+                    <input type="checkbox" id="useWeightsMode" />
+                    <span class="custom-checkbox"></span>
+                    <span id="weights-label"></span>
+                </label>
             </div>
             <div class="storage-section">
                 <h2 id="storage-header"></h2>
@@ -448,6 +508,11 @@
                     <button id="saveWheelBtn"></button>
                 </div>
                 <ul id="savedWheelsList"></ul>
+                <div class="import-export-buttons">
+                    <button id="importBtn"></button>
+                    <button id="exportBtn"></button>
+                    <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+                </div>
             </div>
         </div>
     </div>
@@ -479,8 +544,8 @@
 
     <script>
         const i18n = {
-            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!" },
-            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!" }
+            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла." },
+            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format." }
         };
 
         const canvas = document.getElementById('wheelCanvas');
@@ -609,22 +674,22 @@
         function createFireworks() {
             fireworksContainer.innerHTML = '';
             for (let i = 0; i < 30; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * 150 + 50;
-                const x = window.innerWidth / 2 + Math.cos(angle) * radius;
-                const y = window.innerHeight / 2 + Math.sin(angle) * radius;
-                particle.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                particle.style.left = `${window.innerWidth / 2}px`;
-                particle.style.top = `${window.innerHeight / 2}px`;
-                fireworksContainer.appendChild(particle);
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const a = Math.random() * Math.PI * 2;
+                const r = Math.random() * 150 + 50;
+                const x = window.innerWidth / 2 + Math.cos(a) * r;
+                const y = window.innerHeight / 2 + Math.sin(a) * r;
+                p.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                p.style.left = `${window.innerWidth / 2}px`;
+                p.style.top = `${window.innerHeight / 2}px`;
+                fireworksContainer.appendChild(p);
                 setTimeout(() => {
-                    particle.style.transition = 'transform 0.8s ease-out, opacity 0.8s ease-out';
-                    particle.style.transform = `translate(${x - window.innerWidth/2}px, ${y - window.innerHeight/2}px)`;
-                    particle.style.opacity = '0';
+                    p.style.transition = 'transform 0.8s ease-out, opacity 0.8s ease-out';
+                    p.style.transform = `translate(${x - window.innerWidth/2}px, ${y - window.innerHeight/2}px)`;
+                    p.style.opacity = '0';
                 }, 10);
-                setTimeout(() => particle.remove(), 900);
+                setTimeout(() => p.remove(), 900);
             }
         }
 
@@ -649,19 +714,25 @@
             updateOptionsDisplay();
             drawWheel();
         }
-
+        
         function updateOptionsDisplay() {
             const list = document.getElementById('optionsList');
             const useWeights = document.getElementById('useWeightsMode').checked;
+            const totalActiveWeight = segments.filter(s => s.active).reduce((sum, s) => sum + s.weight, 0);
             list.innerHTML = '';
             segments.forEach((segment, i) => {
                 const li = document.createElement('li');
                 li.className = segment.active ? '' : 'disabled';
+                const percentage = useWeights && totalActiveWeight > 0 ? ((segment.weight / totalActiveWeight) * 100).toFixed(1) + '%' : '';
                 li.innerHTML = `
-                    <input type="checkbox" ${segment.active ? "checked" : ""} data-index="${i}" class="toggle-active">
+                    <label class="checkbox-container" style="flex-shrink:0;">
+                        <input type="checkbox" ${segment.active ? "checked" : ""} data-index="${i}" class="toggle-active">
+                        <span class="custom-checkbox"></span>
+                    </label>
                     <input type="color" value="${segment.color}" data-index="${i}" class="color-input">
                     <span class="option-text">${segment.text}</span>
-                    <input type="number" min="1" value="${segment.weight}" data-index="${i}" class="weight-input" style="display:${useWeights ? 'block':'none'}">
+                    <span class="percentage-display" style="display:${useWeights ? 'block' : 'none'}">${percentage}</span>
+                    <input type="number" min="1" value="${segment.weight}" data-index="${i}" class="weight-input" style="display:${useWeights ? 'block' : 'none'}">
                     <button class="delete-option" data-index="${i}">×</button>
                 `;
                 list.appendChild(li);
@@ -706,6 +777,39 @@
             });
         }
 
+        function exportWheels() {
+            if (Object.keys(savedWheels).length === 0) return;
+            const dataStr = JSON.stringify(savedWheels, null, 2);
+            const dataBlob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'my_wheels.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importWheels(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (typeof imported !== 'object' || imported === null) throw new Error("Invalid format");
+                    Object.assign(savedWheels, imported); // Merge, not overwrite
+                    localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
+                    updateSavedWheelsList();
+                    alert(i18n[currentLang].importSuccess);
+                } catch (err) {
+                    alert(i18n[currentLang].importError);
+                }
+            };
+            reader.readAsText(file);
+        }
+
         function updateLanguage() {
             currentLang = localStorage.getItem('preferredLang') || 'ru';
             document.documentElement.lang = currentLang;
@@ -722,6 +826,8 @@
             document.getElementById('saveWheelBtn').textContent = t.saveBtn;
             document.getElementById('spinBtn').textContent = t.spinBtn;
             document.getElementById('resetEliminationsBtn').textContent = t.resetBtn;
+            document.getElementById('importBtn').textContent = t.importBtn;
+            document.getElementById('exportBtn').textContent = t.exportBtn;
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
             updateSavedWheelsList();
         }
@@ -731,37 +837,71 @@
             spinBtn.addEventListener('click', spin);
             document.getElementById('addOptionBtn').addEventListener('click', addOption);
             document.getElementById('optionInput').addEventListener('keydown', e => { if (e.key === 'Enter') addOption() });
+            
             document.getElementById('optionsList').addEventListener('input', e => {
                 const i = e.target.dataset.index;
-                if (e.target.classList.contains('color-input')) { segments[i].color = e.target.value; drawWheel(); }
-                if (e.target.classList.contains('weight-input')) { segments[i].weight = parseInt(e.target.value) || 1; drawWheel(); }
+                if (e.target.classList.contains('color-input')) segments[i].color = e.target.value;
+                if (e.target.classList.contains('weight-input')) segments[i].weight = parseInt(e.target.value) || 1;
+                updateOptionsDisplay();
+                drawWheel();
             });
             document.getElementById('optionsList').addEventListener('change', e => {
                 if (e.target.classList.contains('toggle-active')) {
                     segments[e.target.dataset.index].active = e.target.checked;
                     document.getElementById('resetEliminationsBtn').style.display = segments.some(s => !s.active) ? 'block' : 'none';
+                    updateOptionsDisplay();
                     drawWheel();
                 }
             });
             document.getElementById('optionsList').addEventListener('click', e => {
                 if (e.target.classList.contains('delete-option')) deleteOption(e.target.dataset.index);
             });
-            document.getElementById('useWeightsMode').addEventListener('change', updateOptionsDisplay);
+            
+            document.getElementById('useWeightsMode').addEventListener('change', () => {
+                updateOptionsDisplay();
+                drawWheel();
+            });
+            
             document.getElementById('saveWheelBtn').addEventListener('click', saveCurrentWheel);
             document.getElementById('savedWheelsList').addEventListener('click', e => {
                 if (e.target.classList.contains('load-wheel')) loadWheel(e.target.dataset.name);
                 if (e.target.classList.contains('delete-wheel')) deleteWheel(e.target.dataset.name);
             });
             document.getElementById('resetEliminationsBtn').addEventListener('click', resetEliminations);
+            document.getElementById('exportBtn').addEventListener('click', exportWheels);
+            document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
+            document.getElementById('importFileInput').addEventListener('change', importWheels);
+            
             modalCloseBtn.addEventListener('click', hideModal);
             modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) hideModal(); });
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); currentLang = e.target.dataset.lang; updateLanguage(); }));
-            document.getElementById('author-signature').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('links-popup').classList.toggle('visible'); });
-            document.addEventListener('click', (e) => { const popup = document.getElementById('links-popup'); if (!popup.contains(e.target) && e.target.id !== 'author-signature') { popup.classList.remove('visible'); } });
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    currentLang = e.target.dataset.lang;
+                    localStorage.setItem('preferredLang', currentLang);
+                    updateLanguage();
+                });
+            });
+            
+            document.getElementById('author-signature').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('links-popup').classList.toggle('visible');
+            });
+            document.addEventListener('click', (e) => {
+                const popup = document.getElementById('links-popup');
+                if (!popup.contains(e.target) && e.target.id !== 'author-signature') {
+                    popup.classList.remove('visible');
+                }
+            });
 
             savedWheels = JSON.parse(localStorage.getItem('savedWheels')) || {};
             if (Object.keys(savedWheels).length === 0 && segments.length === 0) {
-                segments = [{ text: "Pizza", color: "#BF616A", weight: 1, active: true }, { text: "Sushi", color: "#A3BE8C", weight: 1, active: true }, { text: "Burgers", color: "#EBCB8B", weight: 2, active: true }];
+                segments = [
+                    { text: "Pizza", color: "#BF616A", weight: 1, active: true },
+                    { text: "Sushi", color: "#A3BE8C", weight: 1, active: true },
+                    { text: "Burgers", color: "#EBCB8B", weight: 2, active: true }
+                ];
             } else if (segments.length === 0) {
                 const firstWheelName = Object.keys(savedWheels)[0];
                 if (firstWheelName) loadWheel(firstWheelName);
