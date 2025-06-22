@@ -248,7 +248,7 @@
             cursor: pointer;
         }
         
-        .delete-option {
+        .edit-option-btn, .delete-option {
             background: none;
             border: none;
             color: var(--secondary-text-color);
@@ -256,6 +256,9 @@
             cursor: pointer;
             padding: 0 5px;
             transition: color 0.2s;
+        }
+        .edit-option-btn:hover {
+            color: var(--accent-color);
         }
         .delete-option:hover {
             color: #bf616a;
@@ -301,6 +304,41 @@
         }
         input[type="checkbox"]:checked + .custom-checkbox::after {
             transform: translate(-50%, -50%) scale(1);
+        }
+
+        .slider-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .slider-control .label-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #2b2b2b;
+            border-radius: 5px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
         }
 
         #savedWheelsList {
@@ -454,7 +492,7 @@
         .modal-overlay.visible .modal-content {
             transform: scale(1);
         }
-        #modal-winner-text, #weight-modal-title {
+        #modal-winner-text, #weight-modal-title, #text-edit-modal-title {
             font-size: 2.5rem;
             font-weight: 900;
             margin: 0;
@@ -464,7 +502,7 @@
             font-size: 1.5rem;
             margin-top: 10px;
         }
-        #modal-close-btn, #weight-modal-close-btn {
+        #modal-close-btn, #weight-modal-close-btn, #text-edit-modal-close-btn {
             position: absolute;
             top: 15px;
             right: 15px;
@@ -492,7 +530,7 @@
             height: 5px;
         }
 
-        #weight-modal-controls {
+        #weight-modal-controls, #text-edit-modal-controls {
             margin-top: 20px;
             display: flex;
             flex-direction: column;
@@ -506,12 +544,12 @@
             justify-content: space-between;
             align-items: center;
         }
-        #weight-modal-buttons {
+        #weight-modal-buttons, #text-edit-modal-buttons {
             display: flex;
             gap: 10px;
             margin-top: 20px;
         }
-        #weight-modal-buttons button {
+        #weight-modal-buttons button, #text-edit-modal-buttons button {
             flex-grow: 1;
         }
     </style>
@@ -555,6 +593,20 @@
                     <span class="custom-checkbox"></span>
                     <span id="weights-label"></span>
                 </label>
+                <div class="slider-control">
+                    <div class="label-row">
+                        <label for="spinDurationSlider" id="duration-label"></label>
+                        <span id="durationValue"></span>
+                    </div>
+                    <input type="range" id="spinDurationSlider" min="2" max="10" step="0.5">
+                </div>
+                <div class="slider-control">
+                    <div class="label-row">
+                        <label for="spinPowerSlider" id="power-label"></label>
+                        <span id="powerValue"></span>
+                    </div>
+                    <input type="range" id="spinPowerSlider" min="5" max="25" step="1">
+                </div>
             </div>
             <div class="storage-section">
                 <h2 id="storage-header"></h2>
@@ -607,6 +659,19 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="text-edit-modal">
+        <div class="modal-content">
+            <button id="text-edit-modal-close-btn">×</button>
+            <h3 id="text-edit-modal-title"></h3>
+            <div id="text-edit-modal-controls">
+                <input type="text" id="text-edit-modal-input" />
+            </div>
+            <div id="text-edit-modal-buttons">
+                <button id="text-edit-modal-save"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="footer">
         <span id="author-signature">by infikot</span>
         <div id="links-popup">
@@ -617,8 +682,8 @@
 
     <script>
         const i18n = {
-            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла.", weightModalTitle: "Настроить вес", chanceLabel: "Шанс:", saveWeightBtn: "Сохранить", newWheelBtn: "Новое колесо" },
-            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format.", weightModalTitle: "Adjust Weight", chanceLabel: "Chance:", saveWeightBtn: "Save", newWheelBtn: "New Wheel" }
+            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла.", weightModalTitle: "Настроить вес", chanceLabel: "Шанс:", saveWeightBtn: "Сохранить", newWheelBtn: "Новое колесо", durationLabel: "Длительность", powerLabel: "Сила вращения", textEditModalTitle: "Изменить название", saveTextBtn: "Сохранить" },
+            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format.", weightModalTitle: "Adjust Weight", chanceLabel: "Chance:", saveWeightBtn: "Save", newWheelBtn: "New Wheel", durationLabel: "Duration", powerLabel: "Spin Power", textEditModalTitle: "Edit Name", saveTextBtn: "Save" }
         };
 
         const canvas = document.getElementById('wheelCanvas');
@@ -637,7 +702,16 @@
         const weightModalPercentage = document.getElementById('weight-modal-percentage');
         const weightModalSaveBtn = document.getElementById('weight-modal-save');
         const weightModalCloseBtn = document.getElementById('weight-modal-close-btn');
+        const textEditModal = document.getElementById('text-edit-modal');
+        const textEditModalTitle = document.getElementById('text-edit-modal-title');
+        const textEditModalInput = document.getElementById('text-edit-modal-input');
+        const textEditModalSaveBtn = document.getElementById('text-edit-modal-save');
+        const textEditModalCloseBtn = document.getElementById('text-edit-modal-close-btn');
         const tickerDisplay = document.getElementById('ticker-display');
+        const spinDurationSlider = document.getElementById('spinDurationSlider');
+        const spinPowerSlider = document.getElementById('spinPowerSlider');
+        const durationValue = document.getElementById('durationValue');
+        const powerValue = document.getElementById('powerValue');
         
         let segments = [];
         let savedWheels = {};
@@ -660,7 +734,7 @@
                 return;
             }
             
-            const fontSize = Math.max(8, 16 - Math.floor(activeSegments.length / 8));
+            const fontSize = Math.max(8, 18 - Math.floor(activeSegments.length * 0.5));
             ctx.font = `bold ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
 
             segments.forEach((segment) => {
@@ -682,10 +756,10 @@
                 
                 const text = segment.text.length > 15 ? segment.text.substring(0,14) + "…" : segment.text;
                 
-                if (activeSegments.length > 16) { // Vertical text
+                if (activeSegments.length > 16) {
                     ctx.rotate(textAngle + Math.PI);
                     ctx.textAlign = "right";
-                } else { // Radial text
+                } else {
                     ctx.rotate(textAngle + Math.PI / 2);
                     ctx.textAlign = "center";
                 }
@@ -703,9 +777,10 @@
             isSpinning = true;
             menuToggle.disabled = true;
             spinBtn.disabled = true;
-            let spinAngleStart = Math.random() * 10 + 10;
+            
+            let spinAngleStart = parseFloat(spinPowerSlider.value);
             let spinTime = 0;
-            let spinTimeTotal = Math.random() * 3000 + 4000;
+            let spinTimeTotal = parseFloat(spinDurationSlider.value) * 1000;
             
             function rotateWheel() {
                 spinTime += 30;
@@ -853,6 +928,18 @@
             const percentage = newTotalWeight > 0 ? (tempWeight / newTotalWeight * 100).toFixed(2) : 100;
             weightModalPercentage.textContent = `${i18n[currentLang].chanceLabel} ${percentage}%`;
         }
+        
+        function openTextEditModal(index) {
+            const segment = segments[index];
+            textEditModal.dataset.editingIndex = index;
+            textEditModalTitle.textContent = i18n[currentLang].textEditModalTitle;
+            textEditModalInput.value = segment.text;
+            textEditModal.classList.add('visible');
+        }
+
+        function closeTextEditModal() {
+            textEditModal.classList.remove('visible');
+        }
 
         function addOption() {
             const text = document.getElementById('optionInput').value.trim();
@@ -893,6 +980,7 @@
                         <span class="custom-checkbox"></span>
                     </label>
                     <input type="color" value="${segment.color}" data-index="${i}" class="color-input">
+                    <button class="edit-option-btn" data-index="${i}">✎</button>
                     <span class="option-text">${segment.text}</span>
                     <span class="percentage-display" style="display:${useWeights ? 'block' : 'none'}">${percentage}</span>
                     <button class="weight-btn" data-index="${i}" style="display:${useWeights ? 'block' : 'none'}">${segment.weight}</button>
@@ -990,6 +1078,11 @@
             resetEliminations();
         }
 
+        function calculateDefaultDuration() {
+            const count = segments.filter(s => s.active).length;
+            return Math.min(5, 2.5 + count * 0.15);
+        }
+
         function updateLanguage() {
             currentLang = localStorage.getItem('preferredLang') || 'ru';
             document.documentElement.lang = currentLang;
@@ -1001,6 +1094,8 @@
             document.getElementById('settings-header').textContent = t.settingsHeader;
             document.getElementById('elimination-label').textContent = t.eliminationLabel;
             document.getElementById('weights-label').textContent = t.weightsLabel;
+            document.getElementById('duration-label').textContent = t.durationLabel;
+            document.getElementById('power-label').textContent = t.powerLabel;
             document.getElementById('storage-header').textContent = t.storageHeader;
             document.getElementById('wheelNameInput').placeholder = t.saveNamePlaceholder;
             document.getElementById('saveWheelBtn').textContent = t.saveBtn;
@@ -1010,6 +1105,7 @@
             document.getElementById('exportBtn').textContent = t.exportBtn;
             document.getElementById('newWheelBtn').textContent = t.newWheelBtn;
             weightModalSaveBtn.textContent = t.saveWeightBtn;
+            textEditModalSaveBtn.textContent = t.saveTextBtn;
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
             updateSavedWheelsList();
         }
@@ -1046,6 +1142,9 @@
                 }
                 if (e.target.classList.contains('weight-btn')) {
                     openWeightModal(e.target.dataset.index);
+                }
+                if (e.target.classList.contains('edit-option-btn')) {
+                    openTextEditModal(e.target.dataset.index);
                 }
             });
             
@@ -1101,6 +1200,30 @@
                 drawWheel();
             });
 
+            textEditModalCloseBtn.addEventListener('click', closeTextEditModal);
+            textEditModal.addEventListener('click', e => {
+                if (e.target === textEditModal) {
+                    closeTextEditModal();
+                }
+            });
+            textEditModalSaveBtn.addEventListener('click', () => {
+                const index = parseInt(textEditModal.dataset.editingIndex);
+                const newText = textEditModalInput.value.trim();
+                if (newText) {
+                    segments[index].text = newText;
+                }
+                closeTextEditModal();
+                updateOptionsDisplay();
+                drawWheel();
+            });
+
+            spinDurationSlider.addEventListener('input', () => {
+                durationValue.textContent = `${spinDurationSlider.value}s`;
+            });
+            spinPowerSlider.addEventListener('input', () => {
+                powerValue.textContent = spinPowerSlider.value;
+            });
+
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.addEventListener('click', e => {
                     e.preventDefault();
@@ -1132,6 +1255,11 @@
                     loadDefaultWheel();
                 }
             }
+
+            spinDurationSlider.value = calculateDefaultDuration();
+            spinPowerSlider.value = 15;
+            durationValue.textContent = `${spinDurationSlider.value}s`;
+            powerValue.textContent = spinPowerSlider.value;
 
             updateLanguage();
             updateOptionsDisplay();
