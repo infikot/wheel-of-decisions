@@ -100,7 +100,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 35px; /* Увеличенный отступ между секциями */
             padding-right: 5px;
         }
         
@@ -205,9 +205,12 @@
         #optionsList .option-text {
             flex-grow: 1;
         }
-        #optionsList .weight-input {
+        #optionsList .weight-btn {
             width: 50px;
             text-align: center;
+            padding: 5px;
+            font-size: 0.9rem;
+            background-color: #2b2b2b;
         }
         #optionsList .percentage-display {
             font-size: 0.8rem;
@@ -237,6 +240,11 @@
             color: #bf616a;
         }
 
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Отступ между чекбоксами */
+        }
         .checkbox-container {
             display: flex;
             align-items: center;
@@ -253,6 +261,7 @@
             border-radius: 4px;
             position: relative;
             transition: background-color 0.2s;
+            flex-shrink: 0;
         }
         .custom-checkbox::after {
             content: '✔';
@@ -419,11 +428,12 @@
             text-align: center;
             transform: scale(0.7);
             transition: transform 0.3s;
+            min-width: 300px;
         }
         .modal-overlay.visible .modal-content {
             transform: scale(1);
         }
-        #modal-winner-text {
+        #modal-winner-text, #weight-modal-title {
             font-size: 2.5rem;
             font-weight: 900;
             margin: 0;
@@ -433,7 +443,7 @@
             font-size: 1.5rem;
             margin-top: 10px;
         }
-        #modal-close-btn {
+        #modal-close-btn, #weight-modal-close-btn {
             position: absolute;
             top: 15px;
             right: 15px;
@@ -459,6 +469,30 @@
             border-radius: 50%;
             width: 5px;
             height: 5px;
+        }
+
+        /* Стили для модального окна весов */
+        #weight-modal-controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #weight-modal-controls input[type="range"] {
+            width: 100%;
+        }
+        #weight-modal-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #weight-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #weight-modal-buttons button {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -534,6 +568,23 @@
     </div>
     <div id="fireworks-container"></div>
     
+    <div class="modal-overlay" id="weight-modal">
+        <div class="modal-content">
+            <button id="weight-modal-close-btn">×</button>
+            <h3 id="weight-modal-title"></h3>
+            <div id="weight-modal-controls">
+                <div id="weight-modal-info">
+                    <input type="number" id="weight-modal-input" min="1" />
+                    <span id="weight-modal-percentage"></span>
+                </div>
+                <input type="range" id="weight-modal-slider" min="1" max="100" />
+            </div>
+            <div id="weight-modal-buttons">
+                <button id="weight-modal-save"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="footer">
         <span id="author-signature">by infikot</span>
         <div id="links-popup">
@@ -544,26 +595,13 @@
 
     <script>
         const i18n = {
-            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла." },
-            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format." }
+            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла.", weightModalTitle: "Настроить вес", chanceLabel: "Шанс:", saveWeightBtn: "Сохранить" },
+            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format.", weightModalTitle: "Adjust Weight", chanceLabel: "Chance:", saveWeightBtn: "Save" }
         };
 
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas.getContext('2d');
-        const menuToggle = document.getElementById('menu-toggle');
-        const spinBtn = document.getElementById('spinBtn');
-        const modalOverlay = document.getElementById('result-modal');
-        const modalWinnerText = document.getElementById('modal-winner-text');
-        const modalWinnerName = document.getElementById('modal-winner-name');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        const fireworksContainer = document.getElementById('fireworks-container');
+        const canvas = document.getElementById('wheelCanvas'), ctx = canvas.getContext('2d'), menuToggle = document.getElementById('menu-toggle'), spinBtn = document.getElementById('spinBtn'), modalOverlay = document.getElementById('result-modal'), modalWinnerText = document.getElementById('modal-winner-text'), modalWinnerName = document.getElementById('modal-winner-name'), modalCloseBtn = document.getElementById('modal-close-btn'), fireworksContainer = document.getElementById('fireworks-container'), weightModal = document.getElementById('weight-modal'), weightModalTitle = document.getElementById('weight-modal-title'), weightModalInput = document.getElementById('weight-modal-input'), weightModalSlider = document.getElementById('weight-modal-slider'), weightModalPercentage = document.getElementById('weight-modal-percentage'), weightModalSaveBtn = document.getElementById('weight-modal-save'), weightModalCloseBtn = document.getElementById('weight-modal-close-btn');
         
-        let segments = [];
-        let savedWheels = {};
-        let startAngle = 0;
-        let isSpinning = false;
-        let currentLang = localStorage.getItem('preferredLang') || 'ru';
-        
+        let segments = [], savedWheels = {}, startAngle = 0, isSpinning = false, currentLang = localStorage.getItem('preferredLang') || 'ru';
         const defaultColors = ["#BF616A", "#D08770", "#EBCB8B", "#A3BE8C", "#B48EAD", "#5E81AC", "#88C0D0"];
         let colorIndex = 0;
 
@@ -600,19 +638,11 @@
 
         function spin() {
             if (isSpinning || segments.filter(s => s.active).length < 2) return;
-            isSpinning = true;
-            menuToggle.disabled = true;
-            spinBtn.disabled = true;
-            let spinAngleStart = Math.random() * 10 + 10;
-            let spinTime = 0;
-            let spinTimeTotal = Math.random() * 3000 + 4000;
-            
+            isSpinning = true; menuToggle.disabled = true; spinBtn.disabled = true;
+            let spinAngleStart = Math.random() * 10 + 10, spinTime = 0, spinTimeTotal = Math.random() * 3000 + 4000;
             function rotateWheel() {
                 spinTime += 30;
-                if (spinTime >= spinTimeTotal) {
-                    stopRotateWheel();
-                    return;
-                }
+                if (spinTime >= spinTimeTotal) { stopRotateWheel(); return; }
                 const easeOut = (t, b, c, d) => c * ((t = t / d - 1) * t * t + 1) + b;
                 const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
                 startAngle += (spinAngle * Math.PI / 180);
@@ -623,97 +653,73 @@
         }
 
         function stopRotateWheel() {
-            isSpinning = false;
-            menuToggle.disabled = false;
-            spinBtn.disabled = false;
-            
+            isSpinning = false; menuToggle.disabled = false; spinBtn.disabled = false;
             const activeSegments = segments.filter(s => s.active);
             const useWeights = document.getElementById('useWeightsMode').checked;
             const totalValue = activeSegments.reduce((sum, s) => sum + (useWeights ? s.weight : 1), 0);
             
             const degrees = startAngle * 180 / Math.PI + 90;
             let winningAngle = 360 - degrees % 360;
-            let cumulativeAngle = 0;
-            let winner = null;
+            let cumulativeAngle = 0; let winner = null;
 
             for (const segment of activeSegments) {
                 const value = useWeights ? segment.weight : 1;
                 const segmentAngle = (value / totalValue) * 360;
-                if (winningAngle >= cumulativeAngle && winningAngle < cumulativeAngle + segmentAngle) {
-                    winner = segment;
-                    break;
-                }
+                if (winningAngle >= cumulativeAngle && winningAngle < cumulativeAngle + segmentAngle) { winner = segment; break; }
                 cumulativeAngle += segmentAngle;
             }
 
             const isElimination = document.getElementById('eliminationMode').checked;
             if (isElimination && activeSegments.length > 2) {
-                winner.active = false; // Silent elimination
+                winner.active = false;
             } else {
                 showModal(i18n[currentLang].finalWinnerMsg, winner.text);
-                if (isElimination) {
-                    winner.active = false; // Eliminate the final loser
-                }
+                if (isElimination) winner.active = false;
             }
-            document.getElementById('resetEliminationsBtn').style.display = segments.some(s => !s.active) ? 'block' : 'none';
+            document.getElementById('resetEliminationsBtn').style.display = segments.some(s=>!s.active) ? 'block' : 'none';
             updateOptionsDisplay();
             drawWheel();
         }
 
-        function showModal(title, name) {
-            modalWinnerText.textContent = title;
-            modalWinnerName.textContent = name;
-            modalOverlay.classList.add('visible');
-            createFireworks();
-        }
-
-        function hideModal() {
-            modalOverlay.classList.remove('visible');
-        }
-
+        function showModal(title, name) { modalWinnerText.textContent = title; modalWinnerName.textContent = name; modalOverlay.classList.add('visible'); createFireworks(); }
+        function hideModal() { modalOverlay.classList.remove('visible'); }
         function createFireworks() {
             fireworksContainer.innerHTML = '';
             for (let i = 0; i < 30; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                const a = Math.random() * Math.PI * 2;
-                const r = Math.random() * 150 + 50;
-                const x = window.innerWidth / 2 + Math.cos(a) * r;
-                const y = window.innerHeight / 2 + Math.sin(a) * r;
-                p.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                p.style.left = `${window.innerWidth / 2}px`;
-                p.style.top = `${window.innerHeight / 2}px`;
+                const p = document.createElement('div'); p.className = 'particle';
+                const a = Math.random() * Math.PI * 2, r = Math.random() * 150 + 50;
+                const x = window.innerWidth / 2 + Math.cos(a) * r, y = window.innerHeight / 2 + Math.sin(a) * r;
+                p.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`; p.style.left = `${window.innerWidth / 2}px`; p.style.top = `${window.innerHeight / 2}px`;
                 fireworksContainer.appendChild(p);
-                setTimeout(() => {
-                    p.style.transition = 'transform 0.8s ease-out, opacity 0.8s ease-out';
-                    p.style.transform = `translate(${x - window.innerWidth/2}px, ${y - window.innerHeight/2}px)`;
-                    p.style.opacity = '0';
-                }, 10);
+                setTimeout(() => { p.style.transition = 'transform 0.8s ease-out, opacity 0.8s ease-out'; p.style.transform = `translate(${x - window.innerWidth/2}px, ${y - window.innerHeight/2}px)`; p.style.opacity = '0'; }, 10);
                 setTimeout(() => p.remove(), 900);
             }
         }
 
-        function addOption() {
-            const text = document.getElementById('optionInput').value.trim();
-            if (!text) return;
-            segments.push({ text, color: defaultColors[colorIndex++ % defaultColors.length], weight: 1, active: true });
-            document.getElementById('optionInput').value = '';
-            updateOptionsDisplay();
-            drawWheel();
+        function openWeightModal(index) {
+            const segment = segments[index];
+            weightModal.dataset.editingIndex = index;
+            weightModalTitle.textContent = segment.text;
+            weightModalInput.value = segment.weight;
+            weightModalSlider.value = segment.weight;
+            updateWeightModalPercentage(segment.weight);
+            weightModal.classList.add('visible');
+        }
+        function closeWeightModal() { weightModal.classList.remove('visible'); }
+        function updateWeightModalPercentage(tempWeight) {
+            const index = parseInt(weightModal.dataset.editingIndex);
+            const otherActiveWeight = segments.reduce((sum, s, i) => {
+                if (i !== index && s.active) sum += s.weight;
+                return sum;
+            }, 0);
+            const newTotalWeight = otherActiveWeight + tempWeight;
+            const percentage = newTotalWeight > 0 ? (tempWeight / newTotalWeight * 100).toFixed(2) : 100;
+            weightModalPercentage.textContent = `${i18n[currentLang].chanceLabel} ${percentage}%`;
         }
 
-        function deleteOption(index) {
-            segments.splice(index, 1);
-            updateOptionsDisplay();
-            drawWheel();
-        }
-
-        function resetEliminations() {
-            segments.forEach(s => s.active = true);
-            document.getElementById('resetEliminationsBtn').style.display = 'none';
-            updateOptionsDisplay();
-            drawWheel();
-        }
+        function addOption() { const text = document.getElementById('optionInput').value.trim(); if (!text) return; segments.push({ text, color: defaultColors[colorIndex++ % defaultColors.length], weight: 1, active: true }); document.getElementById('optionInput').value = ''; updateOptionsDisplay(); drawWheel(); }
+        function deleteOption(index) { segments.splice(index, 1); updateOptionsDisplay(); drawWheel(); }
+        function resetEliminations() { segments.forEach(s => s.active = true); document.getElementById('resetEliminationsBtn').style.display = 'none'; updateOptionsDisplay(); drawWheel(); }
         
         function updateOptionsDisplay() {
             const list = document.getElementById('optionsList');
@@ -725,94 +731,44 @@
                 li.className = segment.active ? '' : 'disabled';
                 const percentage = useWeights && totalActiveWeight > 0 ? ((segment.weight / totalActiveWeight) * 100).toFixed(1) + '%' : '';
                 li.innerHTML = `
-                    <label class="checkbox-container" style="flex-shrink:0;">
-                        <input type="checkbox" ${segment.active ? "checked" : ""} data-index="${i}" class="toggle-active">
-                        <span class="custom-checkbox"></span>
-                    </label>
+                    <label class="checkbox-container" style="flex-shrink:0;"> <input type="checkbox" ${segment.active?"checked":""} data-index="${i}" class="toggle-active"> <span class="custom-checkbox"></span> </label>
                     <input type="color" value="${segment.color}" data-index="${i}" class="color-input">
                     <span class="option-text">${segment.text}</span>
-                    <span class="percentage-display" style="display:${useWeights ? 'block' : 'none'}">${percentage}</span>
-                    <input type="number" min="1" value="${segment.weight}" data-index="${i}" class="weight-input" style="display:${useWeights ? 'block' : 'none'}">
+                    <span class="percentage-display" style="display:${useWeights?'block':'none'}">${percentage}</span>
+                    <button class="weight-btn" data-index="${i}" style="display:${useWeights?'block':'none'}">${segment.weight}</button>
                     <button class="delete-option" data-index="${i}">×</button>
                 `;
                 list.appendChild(li);
             });
         }
 
-        function saveCurrentWheel() {
-            const name = document.getElementById('wheelNameInput').value.trim() || i18n[currentLang].defaultWheelName;
-            if (segments.length === 0) return;
-            savedWheels[name] = segments.map(s => ({...s}));
-            localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
-            updateSavedWheelsList();
-            document.getElementById('wheelNameInput').value = '';
-        }
-
-        function loadWheel(name) {
-            segments = savedWheels[name].map(s => ({...s}));
-            resetEliminations();
-        }
-
-        function deleteWheel(name) {
-            if (confirm(`Delete "${name}"?`)) {
-                delete savedWheels[name];
-                localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
-                updateSavedWheelsList();
-            }
-        }
-
+        function saveCurrentWheel() { const name = document.getElementById('wheelNameInput').value.trim() || i18n[currentLang].defaultWheelName; if (segments.length === 0) return; savedWheels[name] = segments.map(s => ({...s})); localStorage.setItem('savedWheels', JSON.stringify(savedWheels)); updateSavedWheelsList(); document.getElementById('wheelNameInput').value = ''; }
+        function loadWheel(name) { segments = savedWheels[name].map(s => ({...s})); resetEliminations(); }
+        function deleteWheel(name) { if (confirm(`Delete "${name}"?`)) { delete savedWheels[name]; localStorage.setItem('savedWheels', JSON.stringify(savedWheels)); updateSavedWheelsList(); } }
         function updateSavedWheelsList() {
-            const list = document.getElementById('savedWheelsList');
-            list.innerHTML = '';
+            const list = document.getElementById('savedWheelsList'); list.innerHTML = '';
             Object.keys(savedWheels).forEach(name => {
                 const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>${name}</span>
-                    <div>
-                        <button data-name="${name}" class="load-wheel">${i18n[currentLang].loadBtn}</button>
-                        <button data-name="${name}" class="delete-wheel">${i18n[currentLang].deleteBtn}</button>
-                    </div>
-                `;
+                li.innerHTML = `<span>${name}</span><div><button data-name="${name}" class="load-wheel">${i18n[currentLang].loadBtn}</button><button data-name="${name}" class="delete-wheel">${i18n[currentLang].deleteBtn}</button></div>`;
                 list.appendChild(li);
             });
         }
-
-        function exportWheels() {
-            if (Object.keys(savedWheels).length === 0) return;
-            const dataStr = JSON.stringify(savedWheels, null, 2);
-            const dataBlob = new Blob([dataStr], {type: "application/json"});
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'my_wheels.json';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-
+        function exportWheels() { if (Object.keys(savedWheels).length === 0) return; const dataStr = JSON.stringify(savedWheels, null, 2); const dataBlob = new Blob([dataStr], {type: "application/json"}); const url = URL.createObjectURL(dataBlob); const link = document.createElement('a'); link.href = url; link.download = 'my_wheels.json'; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
         function importWheels(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    if (typeof imported !== 'object' || imported === null) throw new Error("Invalid format");
-                    Object.assign(savedWheels, imported); // Merge, not overwrite
-                    localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
-                    updateSavedWheelsList();
-                    alert(i18n[currentLang].importSuccess);
-                } catch (err) {
-                    alert(i18n[currentLang].importError);
-                }
+                    const imported = JSON.parse(e.target.result); if (typeof imported !== 'object' || imported === null) throw new Error("Invalid format");
+                    Object.assign(savedWheels, imported); localStorage.setItem('savedWheels', JSON.stringify(savedWheels));
+                    updateSavedWheelsList(); alert(i18n[currentLang].importSuccess);
+                } catch (err) { alert(i18n[currentLang].importError); }
             };
             reader.readAsText(file);
         }
 
         function updateLanguage() {
-            currentLang = localStorage.getItem('preferredLang') || 'ru';
-            document.documentElement.lang = currentLang;
+            currentLang = localStorage.getItem('preferredLang') || 'ru'; document.documentElement.lang = currentLang;
             const t = i18n[currentLang];
             document.getElementById('back-to-hub').textContent = t.backToHub;
             document.getElementById('options-header').textContent = t.optionsHeader;
@@ -828,6 +784,7 @@
             document.getElementById('resetEliminationsBtn').textContent = t.resetBtn;
             document.getElementById('importBtn').textContent = t.importBtn;
             document.getElementById('exportBtn').textContent = t.exportBtn;
+            weightModalSaveBtn.textContent = t.saveWeightBtn;
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
             updateSavedWheelsList();
         }
@@ -840,28 +797,21 @@
             
             document.getElementById('optionsList').addEventListener('input', e => {
                 const i = e.target.dataset.index;
-                if (e.target.classList.contains('color-input')) segments[i].color = e.target.value;
-                if (e.target.classList.contains('weight-input')) segments[i].weight = parseInt(e.target.value) || 1;
-                updateOptionsDisplay();
-                drawWheel();
+                if (e.target.classList.contains('color-input')) { segments[i].color = e.target.value; drawWheel(); }
             });
             document.getElementById('optionsList').addEventListener('change', e => {
                 if (e.target.classList.contains('toggle-active')) {
                     segments[e.target.dataset.index].active = e.target.checked;
                     document.getElementById('resetEliminationsBtn').style.display = segments.some(s => !s.active) ? 'block' : 'none';
-                    updateOptionsDisplay();
-                    drawWheel();
+                    updateOptionsDisplay(); drawWheel();
                 }
             });
             document.getElementById('optionsList').addEventListener('click', e => {
                 if (e.target.classList.contains('delete-option')) deleteOption(e.target.dataset.index);
+                if (e.target.classList.contains('weight-btn')) openWeightModal(e.target.dataset.index);
             });
             
-            document.getElementById('useWeightsMode').addEventListener('change', () => {
-                updateOptionsDisplay();
-                drawWheel();
-            });
-            
+            document.getElementById('useWeightsMode').addEventListener('change', () => { updateOptionsDisplay(); drawWheel(); });
             document.getElementById('saveWheelBtn').addEventListener('click', saveCurrentWheel);
             document.getElementById('savedWheelsList').addEventListener('click', e => {
                 if (e.target.classList.contains('load-wheel')) loadWheel(e.target.dataset.name);
@@ -875,33 +825,28 @@
             modalCloseBtn.addEventListener('click', hideModal);
             modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) hideModal(); });
             
+            weightModalCloseBtn.addEventListener('click', closeWeightModal);
+            weightModal.addEventListener('click', e => { if (e.target === weightModal) closeWeightModal(); });
+            weightModalInput.addEventListener('input', () => { const val = parseInt(weightModalInput.value); weightModalSlider.value = val; updateWeightModalPercentage(val); });
+            weightModalSlider.addEventListener('input', () => { const val = parseInt(weightModalSlider.value); weightModalInput.value = val; updateWeightModalPercentage(val); });
+            weightModalSaveBtn.addEventListener('click', () => {
+                const index = parseInt(weightModal.dataset.editingIndex);
+                segments[index].weight = parseInt(weightModalInput.value) || 1;
+                closeWeightModal();
+                updateOptionsDisplay();
+                drawWheel();
+            });
+
             document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    e.preventDefault();
-                    currentLang = e.target.dataset.lang;
-                    localStorage.setItem('preferredLang', currentLang);
-                    updateLanguage();
-                });
+                btn.addEventListener('click', e => { e.preventDefault(); currentLang = e.target.dataset.lang; localStorage.setItem('preferredLang', currentLang); updateLanguage(); });
             });
             
-            document.getElementById('author-signature').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('links-popup').classList.toggle('visible');
-            });
-            document.addEventListener('click', (e) => {
-                const popup = document.getElementById('links-popup');
-                if (!popup.contains(e.target) && e.target.id !== 'author-signature') {
-                    popup.classList.remove('visible');
-                }
-            });
+            document.getElementById('author-signature').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('links-popup').classList.toggle('visible'); });
+            document.addEventListener('click', (e) => { const popup = document.getElementById('links-popup'); if (!popup.contains(e.target) && e.target.id !== 'author-signature') { popup.classList.remove('visible'); } });
 
             savedWheels = JSON.parse(localStorage.getItem('savedWheels')) || {};
             if (Object.keys(savedWheels).length === 0 && segments.length === 0) {
-                segments = [
-                    { text: "Pizza", color: "#BF616A", weight: 1, active: true },
-                    { text: "Sushi", color: "#A3BE8C", weight: 1, active: true },
-                    { text: "Burgers", color: "#EBCB8B", weight: 2, active: true }
-                ];
+                segments = [ { text: "Pizza", color: "#BF616A", weight: 1, active: true }, { text: "Sushi", color: "#A3BE8C", weight: 1, active: true }, { text: "Burgers", color: "#EBCB8B", weight: 2, active: true } ];
             } else if (segments.length === 0) {
                 const firstWheelName = Object.keys(savedWheels)[0];
                 if (firstWheelName) loadWheel(firstWheelName);
