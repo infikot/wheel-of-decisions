@@ -326,6 +326,27 @@
         input[type="checkbox"]:checked + .custom-checkbox::after {
             transform: translate(-50%, -50%) scale(1);
         }
+        
+        /* --- NEW STYLES for Range Sliders --- */
+        .range-slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .range-slider-group > label {
+            font-weight: 500;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .slider-row label {
+             width: 40px;
+             color: var(--secondary-text-color);
+             font-size: 0.9rem;
+        }
+        /* --- END NEW STYLES --- */
 
         .slider-control {
             display: flex;
@@ -344,6 +365,7 @@
             background: #2b2b2b;
             border-radius: 5px;
             outline: none;
+            padding: 0;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -615,19 +637,33 @@
                     <span class="custom-checkbox"></span>
                     <span id="weights-label"></span>
                 </label>
-                <div class="slider-control">
-                    <div class="label-row">
-                        <label for="spinDurationSlider" id="duration-label"></label>
-                        <span id="durationValue"></span>
+                <!-- DURATION SLIDERS -->
+                <div class="range-slider-group">
+                    <label id="duration-range-label"></label>
+                    <div class="slider-row">
+                        <label for="minSpinDurationSlider" id="min-duration-label"></label>
+                        <input type="range" id="minSpinDurationSlider" min="1" max="15" step="0.5">
+                        <span id="minDurationValue" style="width: 40px;"></span>
                     </div>
-                    <input type="range" id="spinDurationSlider" min="2" max="10" step="0.5">
+                    <div class="slider-row">
+                        <label for="maxSpinDurationSlider" id="max-duration-label"></label>
+                        <input type="range" id="maxSpinDurationSlider" min="1" max="15" step="0.5">
+                        <span id="maxDurationValue" style="width: 40px;"></span>
+                    </div>
                 </div>
-                <div class="slider-control">
-                    <div class="label-row">
-                        <label for="spinPowerSlider" id="power-label"></label>
-                        <span id="powerValue"></span>
+                <!-- POWER SLIDERS -->
+                <div class="range-slider-group">
+                    <label id="power-range-label"></label>
+                    <div class="slider-row">
+                        <label for="minSpinPowerSlider" id="min-power-label"></label>
+                        <input type="range" id="minSpinPowerSlider" min="5" max="30" step="1">
+                        <span id="minPowerValue" style="width: 40px;"></span>
                     </div>
-                    <input type="range" id="spinPowerSlider" min="5" max="25" step="1">
+                     <div class="slider-row">
+                        <label for="maxSpinPowerSlider" id="max-power-label"></label>
+                        <input type="range" id="maxSpinPowerSlider" min="5" max="30" step="1">
+                        <span id="maxPowerValue" style="width: 40px;"></span>
+                    </div>
                 </div>
             </div>
             <div class="storage-section">
@@ -703,9 +739,10 @@
     </div>
 
     <script>
+        // --- UPDATED i18n object ---
         const i18n = {
-            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла.", weightModalTitle: "Настроить вес", chanceLabel: "Шанс:", saveWeightBtn: "Сохранить", newWheelBtn: "Новое колесо", durationLabel: "Длительность", powerLabel: "Сила вращения", textEditModalTitle: "Изменить название", saveTextBtn: "Сохранить" },
-            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format.", weightModalTitle: "Adjust Weight", chanceLabel: "Chance:", saveWeightBtn: "Save", newWheelBtn: "New Wheel", durationLabel: "Duration", powerLabel: "Spin Power", textEditModalTitle: "Edit Name", saveTextBtn: "Save" }
+            ru: { backToHub: "← На главную", optionsHeader: "Опции", optionPlaceholder: "Новый вариант...", addBtn: "Добавить", settingsHeader: "Настройки", eliminationLabel: "Режим на выбывание", weightsLabel: "Учитывать веса", storageHeader: "Сохранённые колёса", saveNamePlaceholder: "Имя для сохранения", saveBtn: "Сохранить", loadBtn: "Загрузить", deleteBtn: "Удалить", spinBtn: "КРУТИТЬ!", resetBtn: "Вернуть выбывших", winnerMsg: "Выбыл:", finalWinnerMsg: "Победитель!", defaultWheelName: "Моё колесо", noOptionsMsg: "Добавьте варианты!", importBtn: "Импорт", exportBtn: "Экспорт", importSuccess: "Колёса успешно импортированы!", importError: "Ошибка: Неверный формат файла.", weightModalTitle: "Настроить вес", chanceLabel: "Шанс:", saveWeightBtn: "Сохранить", newWheelBtn: "Новое колесо", durationRangeLabel: "Длительность вращения (сек)", powerRangeLabel: "Сила вращения", minLabel: "Мин.", maxLabel: "Макс.", textEditModalTitle: "Изменить название", saveTextBtn: "Сохранить" },
+            en: { backToHub: "← Back to Hub", optionsHeader: "Options", optionPlaceholder: "New option...", addBtn: "Add", settingsHeader: "Settings", eliminationLabel: "Elimination Mode", weightsLabel: "Use Weights", storageHeader: "Saved Wheels", saveNamePlaceholder: "Name to save", saveBtn: "Save", loadBtn: "Load", deleteBtn: "Delete", spinBtn: "SPIN!", resetBtn: "Reset Eliminated", winnerMsg: "Eliminated:", finalWinnerMsg: "The Winner Is!", defaultWheelName: "My Wheel", noOptionsMsg: "Add options!", importBtn: "Import", exportBtn: "Export", importSuccess: "Wheels imported successfully!", importError: "Error: Invalid file format.", weightModalTitle: "Adjust Weight", chanceLabel: "Chance:", saveWeightBtn: "Save", newWheelBtn: "New Wheel", durationRangeLabel: "Spin Duration (sec)", powerRangeLabel: "Spin Power", minLabel: "Min", maxLabel: "Max", textEditModalTitle: "Edit Name", saveTextBtn: "Save" }
         };
 
         const canvas = document.getElementById('wheelCanvas');
@@ -730,10 +767,16 @@
         const textEditModalSaveBtn = document.getElementById('text-edit-modal-save');
         const textEditModalCloseBtn = document.getElementById('text-edit-modal-close-btn');
         const tickerDisplay = document.getElementById('ticker-display');
-        const spinDurationSlider = document.getElementById('spinDurationSlider');
-        const spinPowerSlider = document.getElementById('spinPowerSlider');
-        const durationValue = document.getElementById('durationValue');
-        const powerValue = document.getElementById('powerValue');
+        
+        // --- NEW SLIDER REFS ---
+        const minSpinDurationSlider = document.getElementById('minSpinDurationSlider');
+        const maxSpinDurationSlider = document.getElementById('maxSpinDurationSlider');
+        const minSpinPowerSlider = document.getElementById('minSpinPowerSlider');
+        const maxSpinPowerSlider = document.getElementById('maxSpinPowerSlider');
+        const minDurationValue = document.getElementById('minDurationValue');
+        const maxDurationValue = document.getElementById('maxDurationValue');
+        const minPowerValue = document.getElementById('minPowerValue');
+        const maxPowerValue = document.getElementById('maxPowerValue');
         
         let segments = [];
         let savedWheels = {};
@@ -792,6 +835,7 @@
             });
         }
 
+        // --- UPDATED spin function ---
         function spin() {
             if (isSpinning || segments.filter(s => s.active).length < 2) {
                 return;
@@ -800,9 +844,19 @@
             menuToggle.disabled = true;
             spinBtn.disabled = true;
             
-            let spinAngleStart = parseFloat(spinPowerSlider.value);
+            // Get min/max values from sliders
+            const minDuration = parseFloat(minSpinDurationSlider.value);
+            const maxDuration = parseFloat(maxSpinDurationSlider.value);
+            const minPower = parseFloat(minSpinPowerSlider.value);
+            const maxPower = parseFloat(maxSpinPowerSlider.value);
+
+            // Generate random values for this specific spin
+            const randomPower = Math.random() * (maxPower - minPower) + minPower;
+            const randomDuration = Math.random() * (maxDuration - minDuration) + minDuration;
+
+            let spinAngleStart = randomPower;
             let spinTime = 0;
-            let spinTimeTotal = parseFloat(spinDurationSlider.value) * 1000;
+            let spinTimeTotal = randomDuration * 1000;
             
             function rotateWheel() {
                 spinTime += 30;
@@ -1102,12 +1156,8 @@
             ];
             resetEliminations();
         }
-
-        function calculateDefaultDuration() {
-            const count = segments.filter(s => s.active).length;
-            return Math.min(5, 2.5 + count * 0.15);
-        }
-
+        
+        // --- UPDATED updateLanguage function ---
         function updateLanguage() {
             currentLang = localStorage.getItem('preferredLang') || 'ru';
             document.documentElement.lang = currentLang;
@@ -1119,8 +1169,15 @@
             document.getElementById('settings-header').textContent = t.settingsHeader;
             document.getElementById('elimination-label').textContent = t.eliminationLabel;
             document.getElementById('weights-label').textContent = t.weightsLabel;
-            document.getElementById('duration-label').textContent = t.durationLabel;
-            document.getElementById('power-label').textContent = t.powerLabel;
+            
+            // New labels
+            document.getElementById('duration-range-label').textContent = t.durationRangeLabel;
+            document.getElementById('power-range-label').textContent = t.powerRangeLabel;
+            document.getElementById('min-duration-label').textContent = t.minLabel;
+            document.getElementById('max-duration-label').textContent = t.maxLabel;
+            document.getElementById('min-power-label').textContent = t.minLabel;
+            document.getElementById('max-power-label').textContent = t.maxLabel;
+
             document.getElementById('storage-header').textContent = t.storageHeader;
             document.getElementById('wheelNameInput').placeholder = t.saveNamePlaceholder;
             document.getElementById('saveWheelBtn').textContent = t.saveBtn;
@@ -1135,6 +1192,7 @@
             updateSavedWheelsList();
         }
         
+        // --- UPDATED init function ---
         function init() {
             menuToggle.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
             spinBtn.addEventListener('click', spin);
@@ -1243,11 +1301,34 @@
                 drawWheel();
             });
 
-            spinDurationSlider.addEventListener('input', () => {
-                durationValue.textContent = `${spinDurationSlider.value}s`;
+            // --- NEW SLIDER EVENT LISTENERS ---
+            minSpinDurationSlider.addEventListener('input', () => {
+                minDurationValue.textContent = `${minSpinDurationSlider.value}s`;
+                if (parseFloat(minSpinDurationSlider.value) > parseFloat(maxSpinDurationSlider.value)) {
+                    maxSpinDurationSlider.value = minSpinDurationSlider.value;
+                    maxDurationValue.textContent = `${maxSpinDurationSlider.value}s`;
+                }
             });
-            spinPowerSlider.addEventListener('input', () => {
-                powerValue.textContent = spinPowerSlider.value;
+            maxSpinDurationSlider.addEventListener('input', () => {
+                maxDurationValue.textContent = `${maxSpinDurationSlider.value}s`;
+                 if (parseFloat(maxSpinDurationSlider.value) < parseFloat(minSpinDurationSlider.value)) {
+                    minSpinDurationSlider.value = maxSpinDurationSlider.value;
+                    minDurationValue.textContent = `${minSpinDurationSlider.value}s`;
+                }
+            });
+            minSpinPowerSlider.addEventListener('input', () => {
+                minPowerValue.textContent = minSpinPowerSlider.value;
+                if (parseInt(minSpinPowerSlider.value) > parseInt(maxSpinPowerSlider.value)) {
+                    maxSpinPowerSlider.value = minSpinPowerSlider.value;
+                    maxPowerValue.textContent = maxSpinPowerSlider.value;
+                }
+            });
+            maxSpinPowerSlider.addEventListener('input', () => {
+                maxPowerValue.textContent = maxSpinPowerSlider.value;
+                if (parseInt(maxSpinPowerSlider.value) < parseInt(minSpinPowerSlider.value)) {
+                    minSpinPowerSlider.value = maxSpinPowerSlider.value;
+                    minPowerValue.textContent = minSpinPowerSlider.value;
+                }
             });
 
             document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -1282,11 +1363,17 @@
                 }
             }
 
-            spinDurationSlider.value = calculateDefaultDuration();
-            spinPowerSlider.value = 15;
-            durationValue.textContent = `${spinDurationSlider.value}s`;
-            powerValue.textContent = spinPowerSlider.value;
-
+            // --- SET INITIAL SLIDER VALUES ---
+            minSpinDurationSlider.value = 3;
+            maxSpinDurationSlider.value = 8;
+            minSpinPowerSlider.value = 10;
+            maxSpinPowerSlider.value = 20;
+            
+            minDurationValue.textContent = `${minSpinDurationSlider.value}s`;
+            maxDurationValue.textContent = `${maxSpinDurationSlider.value}s`;
+            minPowerValue.textContent = minSpinPowerSlider.value;
+            maxPowerValue.textContent = maxSpinPowerSlider.value;
+            
             updateLanguage();
             updateOptionsDisplay();
             drawWheel();
